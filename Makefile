@@ -12,22 +12,20 @@
      INSTPGMFLAGS = -c -s
      INSTMANFLAGS = -c
      TOP_INCLUDES = -I$(INCROOT)
-      CDEBUGFLAGS = -O
       ALLINCLUDES = $(STD_INCLUDES) $(TOP_INCLUDES) $(INCLUDES) $(EXTRA_INCLUDES)
        ALLDEFINES = $(ALLINCLUDES) $(STD_DEFINES) $(PROTO_DEFINES) $(DEFINES) $(COMPATFLAGS)
-           CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(ALLDEFINES)
            LDLIBS = $(SYS_LIBRARIES) $(EXTRA_LIBRARIES)
-        LDOPTIONS = $(CDEBUGFLAGS) $(CCOPTIONS)
+        LDOPTIONS = $(CDEBUGFLAGS) $(CCOPTIONS) $(LDFLAGS)
            RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak *.o core errs ,* *~ *.a .emacs_* tags TAGS make.log MakeOut
          IRULESRC = $(CONFIGDIR)
         IMAKE_CMD = $(IMAKE) -DUseInstalled -I$(IRULESRC) $(IMAKE_DEFINES)
-           BINDIR = $(DESTDIR)/usr/bin/X11
+           BINDIR = $(DESTDIR)/usr/bin
           INCROOT = $(DESTDIR)/usr/include
           MANPATH = $(DESTDIR)/usr/catman/x11_man
     MANSOURCEPATH = $(MANPATH)/man
            MANDIR = $(MANSOURCEPATH)1
             IMAKE = imake
-             XLIB = $(EXTENSIONLIB)  -lX11
+             XLIB = $(EXTENSIONLIB) -L/usr/X11R6/lib -lX11
 
   LOCAL_LIBRARIES = $(XLIB)
 
@@ -43,6 +41,7 @@ unclutter: $(OBJS) $(DEPLIBS)
 	$(LKED) -o $@ $(OBJS) $(LDOPTIONS) $(LOCAL_LIBRARIES) $(LDLIBS) $(EXTRA_LOAD_FLAGS)
 
 install:: unclutter
+	$(INSTALL) -d $(BINDIR)
 	$(INSTALL) -c $(INSTPGMFLAGS) unclutter $(BINDIR)
 install.man:: unclutter.man
 	$(INSTALL) -c $(INSTMANFLAGS) unclutter.man $(MANDIR)/unclutter.1

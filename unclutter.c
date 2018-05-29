@@ -25,6 +25,11 @@
 #include <X11/Xproto.h>
 #include <stdio.h>
 #include "vroot.h"
+#include <string.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <regex.h>
 
 char *progname;
 pexit(str)char *str;{
@@ -43,9 +48,23 @@ usage(){
  	-root	       		apply to cursor on root window too\n\
 	-onescreen		apply only to given screen of display\n\
  	-visible       		ignore visibility events\n\
- 	-noevents      		dont send pseudo events\n\
-	-not names...		dont apply to windows whose wm-name begins.\n\
-				(must be last argument)");
+ 	-noevents      		don't send pseudo events\n\
+	-regex			name or class below is a regular expression\n\
+	-not names...		don't apply to windows whose wm-name begins.\n\
+				(must be last argument)\n\
+	-notname names...	same as -not names...\n\
+	-notclass classes...    don't apply to windows whose wm-class begins.\n\
+				(must be last argument, cannot be used with\n\
+				-not or -notname)");
+}
+
+static void dsleep(float t)
+{
+    struct timeval tv;
+    assert(t >= 0);
+    tv.tv_sec = (int) t;
+    tv.tv_usec = (t - tv.tv_sec) * 1000000;
+    select(0, NULL, NULL, NULL, &tv);
 }
 
 #define ALMOSTEQUAL(a,b) (abs(a-b)<=jitter)
@@ -66,27 +85,46 @@ XErrorEvent *error;
 	(*defaulthandler)(display,error);
 }
 
-char **names;	/* -> argv list of names to avoid */
+char **names = 0;	/* -> argv list of names to avoid */
+char **classes = 0;     /* -> argv list of classes to avoid */
+regex_t *nc_re = 0;     /* regex for list of classes/names to avoid */
 
 /*
- * return true if window has a wm_name and the start of it matches
- * one of the given names to avoid
+ * return true if window has a wm_name (class) and the start of it matches
+ * one of the given names (classes) to avoid
  */
 nameinlist(display,window)
 Display *display;
 Window window;
 {
     char **cpp;
-    char *name;
+    char *name = 0;
 
-    if(names==0)return 0;
-    if(XFetchName (display, window, &name)){
-	for(cpp = names;*cpp!=0;cpp++){
-	    if(strncmp(*cpp,name,strlen(*cpp))==0)
-		break;
+    if(names)
+	XFetchName (display, window, &name);
+    else if(classes){
+	XClassHint *xch = XAllocClassHint();
+	if(XGetClassHint (display, window, xch))
+	    name = strdup(xch->res_class);
+	if(xch)
+	    XFree(xch);
+    }else
+	return 0;
+
+    if(name){
+	if(nc_re){
+	    if(!regexec(nc_re, name, 0, 0, 0)) {
+		XFree(name);
+		return 1;
+	    }
+	}else{
+	    for(cpp = names!=0 ? names : classes;*cpp!=0;cpp++){
+		if(strncmp(*cpp,name,strlen(*cpp))==0)
+		    break;
+	    }
+	    XFree(name);
+	    return(*cpp!=0);
 	}
-	XFree(name);
-	return(*cpp!=0);
     }
     return 0;
 }	
@@ -120,8 +158,9 @@ Window root;
 main(argc,argv)char **argv;{
     Display *display;
     int screen,oldx = -99,oldy = -99,numscreens;
-    int doroot = 0, jitter = 0, idletime = 5, usegrabmethod = 0, waitagain = 0,
-	dovisible = 1, doevents = 1, onescreen = 0;
+    int doroot = 0, jitter = 0, usegrabmethod = 0, waitagain = 0,
+        dovisible = 1, doevents = 1, onescreen = 0;
+    float idletime = 5.0;
     Cursor *cursor;
     Window *realroot;
     Window root;
@@ -133,7 +172,7 @@ main(argc,argv)char **argv;{
 	if(strcmp(*argv,"-idle")==0){
 	    argc--,argv++;
 	    if(argc<0)usage();
-	    idletime = atoi(*argv);
+	    idletime = atof(*argv);
 	}else if(strcmp(*argv,"-keystroke")==0){
 	    idletime = -1;
 	}else if(strcmp(*argv,"-jitter")==0){
@@ -152,10 +191,17 @@ main(argc,argv)char **argv;{
 	    onescreen = 1;
 	}else if(strcmp(*argv,"-visible")==0){
 	    dovisible = 0;
-	}else if(strcmp(*argv,"-not")==0){
+	}else if(strcmp(*argv,"-regex")==0){
+	    nc_re = (regex_t *)malloc(sizeof(regex_t));
+	}else if(strcmp(*argv,"-not")==0 || strcmp(*argv,"-notname")==0){
 	    /* take rest of srg list */
 	    names = ++argv;
 	    if(*names==0)names = 0;	/* no args follow */
+	    argc = 0;
+	}else if(strcmp(*argv,"-notclass")==0){
+	    /* take rest of arg list */
+	    classes = ++argv;
+	    if(*classes==0)classes = 0;	/* no args follow */
 	    argc = 0;
 	}else if(strcmp(*argv,"-display")==0 || strcmp(*argv,"-d")==0){
 	    argc--,argv++;
@@ -163,6 +209,21 @@ main(argc,argv)char **argv;{
 	    displayname = *argv;
 	}else usage();
     }
+    /* compile a regex from the first name or class */
+    if(nc_re){
+	if(names || classes){
+	    if (regcomp(nc_re, (names != 0 ? *names : *classes),
+			REG_EXTENDED | REG_NOSUB)) { /* error */
+		free(nc_re);
+		names = classes = 0;
+		nc_re = 0;
+	    }
+	}else{ /* -regex without -not... ... */
+	    free(nc_re);
+	    nc_re = 0;
+	}
+    }
+
     display = XOpenDisplay(displayname);
     if(display==0)pexit("could not open display");
     numscreens = ScreenCount(display);
@@ -251,7 +312,7 @@ main(argc,argv)char **argv;{
 		}
 	    }
 	    if(idletime>=0)
-		sleep(idletime);
+		dsleep(idletime);
 	}
 	/* wait again next time */
 	if(waitagain)
@@ -270,6 +331,10 @@ main(argc,argv)char **argv;{
 			ALMOSTEQUAL(rootx,event.xmotion.x) &&
 			ALMOSTEQUAL(rooty,event.xmotion.y)));
 		XUngrabPointer(display, CurrentTime);
+	    }else{
+		/* go to sleep to prevent tight loops */
+		if(idletime>=0)
+			dsleep(idletime);
 	    }
 	}else{
 	    XSetWindowAttributes attributes;
@@ -334,7 +399,9 @@ main(argc,argv)char **argv;{
 		do{
 		    XNextEvent(display,&event);
 		}while(event.type!=LeaveNotify &&
-		       event.type!=FocusOut &&
+		    /* Some gtk applications seem not to like this:
+		     * event.type!=FocusOut && 
+		     */
 		       event.type!=UnmapNotify &&
 		       event.type!=ConfigureNotify &&
 		       event.type!=CirculateNotify &&
