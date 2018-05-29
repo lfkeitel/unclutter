@@ -25,7 +25,7 @@ diff -Naurp unclutter.orig/Makefile unclutter/Makefile
  
  install:: unclutter
 +	$(INSTALL) -d $(BINDIR)
- 	$(INSTALL) -c $(INSTPGMFLAGS)   unclutter $(BINDIR)
+ 	$(INSTALL) -c $(INSTPGMFLAGS) unclutter $(BINDIR)
  install.man:: unclutter.man
  	$(INSTALL) -c $(INSTMANFLAGS) unclutter.man $(MANDIR)/unclutter.1
 diff -Naurp unclutter.orig/unclutter.c unclutter/unclutter.c
