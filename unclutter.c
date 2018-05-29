@@ -19,6 +19,7 @@
  * Mark M Martin. cetia feb 1994  mmm@cetia.fr
  * keystroke code from Bill Trost trost@cloud.rain.com
  */
+#include <stdlib.h>
 #include <X11/Xos.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -27,16 +28,16 @@
 #include "vroot.h"
 #include <string.h>
 #include <assert.h>
-#include <stdlib.h>
 #include <sys/types.h>
 #include <regex.h>
 
 char *progname;
-pexit(str)char *str;{
+void pexit(str)char *str;{
     fprintf(stderr,"%s: %s\n",progname,str);
     exit(1);
 }
-usage(){
+
+static void usage(){
     pexit("usage:\n\
 	-display <display>\n\
 	-idle <seconds>		time between polls to detect idleness.\n\
@@ -93,7 +94,7 @@ regex_t *nc_re = 0;     /* regex for list of classes/names to avoid */
  * return true if window has a wm_name (class) and the start of it matches
  * one of the given names (classes) to avoid
  */
-nameinlist(display,window)
+int nameinlist(display,window)
 Display *display;
 Window window;
 {
@@ -127,11 +128,11 @@ Window window;
 	}
     }
     return 0;
-}	
+}
 /*
  * create a small 1x1 curssor with all pixels masked out on the given screen.
  */
-createnullcursor(display,root)
+Cursor createnullcursor(display,root)
 Display *display;
 Window root;
 {
@@ -155,7 +156,11 @@ Window root;
     return cursor;
 }
 
-main(argc,argv)char **argv;{
+int
+main(argc,argv)
+int argc;
+char **argv;
+{
     Display *display;
     int screen,oldx = -99,oldy = -99,numscreens;
     int doroot = 0, jitter = 0, usegrabmethod = 0, waitagain = 0,
@@ -165,7 +170,7 @@ main(argc,argv)char **argv;{
     Window *realroot;
     Window root;
     char *displayname = 0;
-    
+
     progname = *argv;
     argc--;
     while(argv++,argc-->0){
@@ -260,7 +265,7 @@ main(argc,argv)char **argv;{
 	int rootx,rooty,winx,winy;
 	unsigned int modifs;
 	Window lastwindowavoided = None;
-	
+
 	/*
 	 * wait for pointer to not move and no buttons down
 	 * or if triggered by keystroke check no buttons down
@@ -340,7 +345,7 @@ main(argc,argv)char **argv;{
 	    XSetWindowAttributes attributes;
 	    XEvent event;
 	    Window cursorwindow;
-	    
+
 	    /* create small input-only window under cursor
 	     * as a sub window of the window currently under the cursor
 	     */
@@ -356,7 +361,7 @@ main(argc,argv)char **argv;{
 		(display, windowin,
 		 winx-jitter, winy-jitter,
 		 jitter*2+1, jitter*2+1, 0, CopyFromParent,
-		 InputOnly, CopyFromParent, 
+		 InputOnly, CopyFromParent,
 		 CWOverrideRedirect | CWEventMask | CWCursor,
 		 &attributes);
 	    /* discard old events for previously created windows */
@@ -400,7 +405,7 @@ main(argc,argv)char **argv;{
 		    XNextEvent(display,&event);
 		}while(event.type!=LeaveNotify &&
 		    /* Some gtk applications seem not to like this:
-		     * event.type!=FocusOut && 
+		     * event.type!=FocusOut &&
 		     */
 		       event.type!=UnmapNotify &&
 		       event.type!=ConfigureNotify &&

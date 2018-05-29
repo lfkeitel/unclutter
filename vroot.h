@@ -3,11 +3,11 @@
  * From: stolcke@ICSI.Berkeley.EDU (Andreas Stolcke)
  * Subject: Converting programs to virtual root
  * Date: 8 Sep 90 02:26:14 GMT
- * 
+ *
  * Andreas Stolcke
  * International Computer Science Institute	stolcke@icsi.Berkeley.EDU
  * 1957 Center St., Suite 600, Berkeley, CA 94704	(415) 642-4274 ext. 126
- * 
+ *
  * vroot.h -- Virtual Root Window handling header file
  *
  * This header file redefines the X11 macros RootWindow and DefaultRootWindow,
@@ -17,7 +17,7 @@
  * window managers.
  * The function implementing the virtual root lookup remembers the result of
  * its last invocation to avoid overhead in the case of repeated calls
- * on the same display and screen arguments. 
+ * on the same display and screen arguments.
  * The lookup code itself is taken from Tom LaStrange's ssetroot program.
  *
  * Most simple root window changing X programs can be converted to using
@@ -38,8 +38,9 @@
 #include <X11/Xatom.h>
 
 static Window
-VirtualRootWindow(dpy, screen)
+VirtualRootWindow(dpy,screen)
 Display *dpy;
+int screen;
 {
 	static Display *save_dpy = (Display *)0;
 	static int save_screen = -1;
