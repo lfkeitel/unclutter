@@ -1,0 +1,160 @@
+Description: Fixes dash usage in man page
+ i.e. fixes lintian warning hyphen-used-as-minus-sign.
+Author: Axel Beckert <abe@debian.org>
+
+Index: unclutter/unclutter.man
+===================================================================
+--- unclutter.orig/unclutter.man	2013-04-30 01:38:31.503864334 +0200
++++ unclutter/unclutter.man	2013-04-30 01:42:07.409484863 +0200
+@@ -1,27 +1,27 @@
+ .\"unclutter man
+ .TH UNCLUTTER 1
+ .SH NAME
+-unclutter \- remove idle cursor image from screen
++unclutter - remove idle cursor image from screen
+ .SH SYNOPSIS
+ .B
+ unclutter
+-.RB [ -display | -d
++.RB [ \-display | \-d
+ .IR display ]
+-.RB [ -idle
++.RB [ \-idle
+ .IR seconds ]
+-.RB [ -keystroke ]
+-.RB [ -jitter
++.RB [ \-keystroke ]
++.RB [ \-jitter
+ .IR pixels ]
+-.RB [ -grab ]
+-.RB [ -noevents ]
+-.RB [ -reset ]
+-.RB [ -root ]
+-.RB [ -onescreen ]
+-.RB [ -visible ]
+-.RB [ -regex ]
+-.RB [ -not | -notname
++.RB [ \-grab ]
++.RB [ \-noevents ]
++.RB [ \-reset ]
++.RB [ \-root ]
++.RB [ \-onescreen ]
++.RB [ \-visible ]
++.RB [ \-regex ]
++.RB [ \-not | \-notname
+ .IR name " " ... ]
+-.RB [ -notclass
++.RB [ \-notclass
+ .IR class " " ... ]
+ .SH DESCRIPTION
+ .B unclutter
+@@ -33,30 +33,30 @@
+ if you have a mouse that twitches.
+ .SH OPTIONS
+ .TP
+--display
++\-display
+ is followed by the display to open.
+ .TP
+--idle
++\-idle
+ is followed by the number of seconds between polls for idleness.
+ The default is 5. Supports subsecond idle times.
+ .TP
+--keystroke
++\-keystroke
+ tells
+ .B unclutter
+ not to use a timeout to determine when to remove the cursor, but to
+ instead wait until a key has been pressed (released, really).
+ .TP
+--jitter
++\-jitter
+ is followed by the amount of movement of the pointer that is to be ignored
+ and considered as random noise.
+ The default is 0.
+ .TP
+--grab
++\-grab
+ means use the original method of grabbing the pointer in order to remove the
+ cursor. 
+ This often doesn't interoperate too well with some window managers.
+ .TP
+--noevents
++\-noevents
+ stops unclutter sending a pseudo EnterNotify event to the X client whose
+ cursor has been stolen.
+ Sending the event helps programs like emacs think that they have not
+@@ -64,47 +64,47 @@
+ This option is provided for backwards compatibility in case some
+ clients get upset.
+ .TP
+--reset
++\-reset
+ resets the timeout for idleness after the cursor is restored for some reason
+ (such as a window being pushed or popped) even though the x y coordinates
+ of the cursor have not changed.
+ Normally, the cursor would immediately be removed again.
+ .TP
+--root
++\-root
+ means remove the cursor even if it is on the root background, where in
+ principle it should not be obscuring anything useful.
+ .TP
+--onescreen
++\-onescreen
+ restricts unclutter to the single screen specified as display,
+ or the default screen for the display.
+ Normally, unclutter will unclutter all the screens on a display.
+ .TP
+--visible
+-ignore visibility events (does not apply to -grab).
+-If the cursor never gets hidden, despite a generous -jitter value,
++\-visible
++ignore visibility events (does not apply to \-grab).
++If the cursor never gets hidden, despite a generous \-jitter value,
+ try this option
+ .TP
+--not
++\-not
+ is followed by a list of window names where the cursor should not be
+ removed.
+ The first few characters of the WM_NAME property on the window need
+ to match one the listed names.
+ This argument must be the last on the command line.
+ .TP
+--notname
+-is exactly the same as -not
++\-notname
++is exactly the same as \-not
+ .TP
+--notclass
+-is similar to -notname, except that the WM_CLASS property of the window is used.
++\-notclass
++is similar to \-notname, except that the WM_CLASS property of the window is used.
+ This argument must be the last on the command line, and so cannot be used
+-with -not or -notname.
++with \-not or \-notname.
+ .TP
+--regex
++\-regex
+ treats the first name or class (see above) as a regular expression.
+-This means that `` -regex -not foo bar '' will not work as expected; instead
+-use `` -regex -not 'foo|bar' ''.
++This means that `` \-regex \-not foo bar '' will not work as expected; instead
++use `` \-regex \-not 'foo|bar' ''.
+ .SH LIMITATIONS
+-The -keystroke option may not work (that is, the cursor will not
++The \-keystroke option may not work (that is, the cursor will not
+ disappear) with clients that request KeyRelease events.
+ Games and Xt applications using KeyUp in their translation tables are 
+ most likely to suffer from this problem.
+@@ -112,7 +112,7 @@
+ extension to get all keyboard and mouse events, though this of course
+ requires XTest to be in the server too.
+ .PP
+-The -keystroke option does not distinguish modifier keys from
++The \-keystroke option does not distinguish modifier keys from
+ keys which actually generate characters.
+ If desired this could be implemented in a simple way by using XLookupString
+ to see if any characters are returned.

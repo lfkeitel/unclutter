@@ -1,0 +1,9 @@
+source=(https://launchpad.net/ubuntu/+archive/primary/+files/unclutter_$pkgver.orig.tar.gz
+        https://bazaar.launchpad.net/~ubuntu-branches/ubuntu/utopic/unclutter/utopic/download/head:/01conglomeration.pat-20091222130226-tgyiwr1wodaf0wjj-5/01-conglomeration.patch
+        https://bazaar.launchpad.net/~ubuntu-branches/ubuntu/utopic/unclutter/utopic/download/head:/02passflags.patch-20130504131058-t2ghxa8d07zo6kqx-15/02-pass-flags.patch
+        https://bazaar.launchpad.net/~ubuntu-branches/ubuntu/utopic/unclutter/utopic/download/head:/03fixgtkblinking.pat-20130504131058-t2ghxa8d07zo6kqx-10/03-fix-gtk-blinking.patch
+        https://bazaar.launchpad.net/~ubuntu-branches/ubuntu/utopic/unclutter/utopic/download/head:/04manpagefixes.patch-20130504131058-t2ghxa8d07zo6kqx-14/04-man-page-fixes.patch)
+
+for i in "${source[@]}"; do
+	wget "$i"
+done
